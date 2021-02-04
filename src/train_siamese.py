@@ -28,13 +28,15 @@ def get_args():
     parser.add_argument('--neg-num', type=int, default=1)
     parser.add_argument('--batch-size', type=int, default=16)
     parser.add_argument('--num-workers', type=int, default=0)
-    parser.add_argument('--n-classes', type=int, default=2)
+    parser.add_argument('--n-classes', type=int, default=-1)
     parser.add_argument('--epoch', type=int, default=3)
     parser.add_argument('--resume-from', type=str, default=None)
     parser.add_argument('--step-size', type=int, default=30)
     parser.add_argument('--lr', default=0.05, type=float, help='learning rate')
     parser.add_argument('--droprate', type=float, default=0.5, help='drop rate')
     parser.add_argument('--stride', default=2, type=int, help='stride')
+    parser.add_argument('--gpu', type=int, default=0)
+    parser.add_argument('--use-gpu', type=bool, default=False)
     return parser.parse_args()
 
 
@@ -257,8 +259,11 @@ if __name__ == '__main__':
     logger.setup("./log", "siamese_debug")
     writer = SummaryWriter('log/train_siamese')
     args = get_args()
-    df_train, df_val = get_dataset_df(args)
 
+    if args.use_gpu:
+        torch.cuda.set_device(args.gpu)
+
+    df_train, df_val = get_dataset_df(args)
     # id = df_train.iloc[1]['image_1']
     # image_dir = "%s/train_all" % args.data_dir
     # path = "%s/%s/%s" % (image_dir, id.split('_')[0], id)
@@ -292,7 +297,8 @@ if __name__ == '__main__':
                      fc_in_features=2048,
                      out_features=512,
                      backbone="resnet50")
-
+    if args.use_gpu:
+        model.cuda()
     # outputs = model(input_1, input_2)
     # writer.add_graph(model, (input_1, input_2))
     # writer.close()
