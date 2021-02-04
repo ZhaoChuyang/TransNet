@@ -209,6 +209,11 @@ def run_nn(args, mode, model, loader, criterion=None, optim=None, apex=None):
     outputs_all = []
 
     for i, (inputs_1, inputs_2, targets, ids) in enumerate(loader):
+        if args.use_gpu:
+            input_1 = input_1.cuda()
+            input_2 = input_2.cuda()
+            targets = targets.cuda()
+
         batch_size = len(inputs_1)
         # NOTE: using cuda
         outputs = model(inputs_1, inputs_2)
