@@ -101,8 +101,8 @@ class TransNet(nn.Module):
         features_B = self.fc(features_B)
 
         dist = torch.linalg.norm(features_A - features_B, dim=1)
-        output = self.sigmoid(dist)
-        return output
+        # output = self.sigmoid(dist)
+        return dist
 
 
 if __name__ == '__main__':

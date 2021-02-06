@@ -15,6 +15,7 @@ from torchvision import datasets, transforms
 from torch.utils.tensorboard import SummaryWriter
 
 from .utils.logger import log, logger
+from .utils.util import save_model, load_model
 from .models.ft_net import ft_net
 from .models.attn_net import TransNet
 
@@ -101,29 +102,21 @@ def get_transforms(args):
     return transforms.Compose(train_transforms), transforms.Compose(val_transforms)
 
 
-def save_model(model, optim, detail):
-    path = "checkpoints/attn_siamese_ep%d.pt" % detail['epoch']
-    torch.save({
-        "model": model.state_dict(),
-        "optim": optim.state_dict(),
-        "detail": detail,
-    }, path)
-    log("save model to %s" % path)
+class ContrastiveLoss(torch.nn.Module):
+    """
+    Contrastive loss function.
+    Based on: http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf
+    """
+    def __init__(self, margin=2.0):
+        super(ContrastiveLoss, self).__init__()
+        self.margin = margin
 
+    def forward(self, dist, label):
 
-def load_model(path, model, optim=None):
-    # remap everthing onto CPU
-    state = torch.load(str(path), map_location=lambda storage, location: storage)
-    model.load_state_dict(state["model"])
-    if optim:
-        log("loading optim")
-        optim.load_state_dict(state["model"])
-    else:
-        log("not loading optim")
-    model.cuda()
-    detail = state["detail"]
-    log("loaded model from %s" % path)
-    return detail
+        loss = torch.mean(1/2*(label) * torch.pow(dist, 2) +
+                                      1/2*(1-label) * torch.pow(torch.clamp(self.margin - dist, min=0.0), 2))
+
+        return loss
 
 
 class CustomDataset(torch.utils.data.Dataset):
@@ -172,7 +165,8 @@ def train(args, model, train_dataset, val_dataset, train_dataloader, val_dataloa
     log('valid data: loaded %d records' % len(val_dataset))
 
     scheduler = lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
-    criterion = torch.nn.BCELoss()
+    # criterion = torch.nn.BCELoss()
+    criterion = ContrastiveLoss()
 
     for epoch in range(best['epoch']+1, args.epoch):
         log(f'\n----- epoch {epoch} -----')
@@ -249,12 +243,12 @@ def run_nn(args, mode, model, loader, criterion=None, optim=None, apex=None):
         'loss': np.sum(losses) / (i+1)
     }
 
-    if mode in ['train', 'valid']:
-        acc = np.sum(result['targets'] == np.round(result['outputs'])) / len(result['targets'])
-        result.update({'acc': acc})
-        print(result['targets'])
-        print(result['outputs'])
-        log(f"[%s] accuracy: %.4f" % (mode, acc))
+    # if mode in ['train', 'valid']:
+    #     acc = np.sum(result['targets'] == np.round(result['outputs'])) / len(result['targets'])
+    #     result.update({'acc': acc})
+    #     print(result['targets'])
+    #     print(result['outputs'])
+    #     log(f"[%s] accuracy: %.4f" % (mode, acc))
 
     return result
 
