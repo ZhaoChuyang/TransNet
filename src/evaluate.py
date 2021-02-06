@@ -244,9 +244,9 @@ def main():
     query, shot, images, ids = next(iter(test_dataloader))
     # print(query, shot, images, ids)
     model = get_model(args)
-    result = run_nn(args, 'test', model, test_dataloader)
-    with open("%s/preds_out.pkl" % args.outdir, "wb") as fb:
-        pickle.dump(result, fb)
+    # result = run_nn(args, 'test', model, test_dataloader)
+    # with open("%s/preds_out.pkl" % args.outdir, "wb") as fb:
+    #     pickle.dump(result, fb)
     with open("%s/preds_out.pkl" % args.outdir, "rb") as fb:
         result = pickle.load(fb)
     compute_mAP(result, gt_query_dir)
