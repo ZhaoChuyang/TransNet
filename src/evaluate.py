@@ -29,6 +29,7 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--data-dir", type=str, default="data/Market-1501-v15.09.15")
     parser.add_argument("--use-gpu", type=bool, default=False)
+    parser.add_argument("--gpu", type=int, default=0)
     parser.add_argument("--snapshot", type=str, default="checkpoints/attn_siamese_ep0.pt")
     parser.add_argument("--query-num", type=int, default=10)
     parser.add_argument("--batch-size", type=int, default=50)
@@ -42,12 +43,12 @@ def display_image(path):
     img.show()
 
 
-def get_indices(gt_query_dir, query):
+def get_indices(query, gt_query_dir):
     """
     query format: 0001_c1s1_001051_00.jpg
     """
     # remove file extension
-    query = query.split('.')[-2]
+    # query = query.split('.')[0]
     good_path = "%s/%s_good.mat" % (gt_query_dir, query)
     junk_path = "%s/%s_junk.mat" % (gt_query_dir, query)
 
@@ -57,13 +58,54 @@ def get_indices(gt_query_dir, query):
     return good_indices, junk_indices
 
 
-def compute_mAP():
+def compute_mAP(result, gt_query_dir):
     """
     1. remove junk indices from the query result
     2. match good shots using good indices
     3. calculate mAP
+
+    result:
+    {
+        ids_1: [...],
+        ids_2: [...],
+        distances: [...],
+        shot_ids: [...],
+    }
     """
-    pass
+    dist_mat = {}
+    for query, shot, dist, shot_id in zip(
+            result['ids_1'], result['ids_2'], result['distances'], result['shot_ids']):
+        print(query, shot, dist, shot_id)
+        query_name = query.split('.')[0]
+        if query_name not in dist_mat:
+            dist_mat[query_name] = np.full(shape=20000, fill_value=np.inf)
+        dist_mat[query_name][shot_id] = dist
+
+    ap_all = []
+    for query in result['ids_1']:
+        query_name = query.split('.')[0]
+        good_indices, junk_indices = get_indices(query_name, gt_query_dir)
+        for index in junk_indices:
+            dist_mat[query_name][index] = np.inf
+        sorted_indices = np.argsort(dist_mat[query_name])
+        print(sorted_indices)
+        sorted_indices = np.array([True if (x in good_indices) else False for x in sorted_indices])
+        rows_good = np.argwhere(sorted_indices)
+        ngood = len(good_indices)
+        rows_good = rows_good.flatten()
+        ap = 0
+        for i in range(ngood):
+            d_recall = 1.0 / ngood
+            precision = (i + 1) * 1.0 / (rows_good[i] + 1)
+            if rows_good[i] != 0:
+                old_precision = i * 1.0 / rows_good[i]
+            else:
+                old_precision = 1.0
+            ap = ap + d_recall * (old_precision + precision) / 2
+        ap_all.append(ap)
+    ap_all = np.array(ap_all)
+    print(ap_all)
+    print(np.mean(ap_all))
 
 
 def get_transforms(args):
@@ -117,7 +159,7 @@ def get_dataset_df(args):
     df_test = {"query": [], "shot": [], "shot_id": []}
     gallery_dir_files = sorted(os.listdir(gallery_dir))
     for query in tqdm(os.listdir(query_dir)[:args.query_num]):
-        for id, shot in enumerate(gallery_dir_files):
+        for id, shot in enumerate(gallery_dir_files[:20]):
             if query.split('.')[-1] != 'jpg' or shot.split('.')[-1] != 'jpg':
                 continue
             df_test["query"].append(query)
@@ -126,34 +168,6 @@ def get_dataset_df(args):
     df_test = pd.DataFrame(df_test)
     df_test.to_csv("output/df_test.csv")
     return df_test
-
-
-def main():
-    args = get_args()
-    data_dir = args.data_dir
-    test_dir = "%s/bounding_box_test" % data_dir
-    gt_query_dir = "%s/gt_query" % data_dir
-
-    all_files = os.listdir(test_dir)
-    all_files = sorted(all_files)
-    # id = 6619
-    # filename = all_files[id]
-    # img_path = "%s/%s" % (test_dir, filename)
-    # print(filename)
-    # display_image(img_path)
-    get_indices(gt_query_dir, "0001_c1s1_001051_00.jpg")
-    test_df = get_dataset_df(args)
-    test_transforms = get_transforms(args)
-    test_dataset = TestDataset(args, test_df, test_transforms)
-    test_dataloader = torch.utils.data.DataLoader(test_dataset,
-                                                   batch_size=args.batch_size,
-                                                   num_workers=args.num_workers)
-    query, shot, images, ids = next(iter(test_dataloader))
-    print(query, shot, images, ids)
-    model = get_model(args)
-    result = run_nn(args, 'test', model, test_dataloader)
-    with open(args.outdir, "wb") as fb:
-        pickle.dump(result, fb)
 
 
 def run_nn(args, mode, model, loader, criterion=None, optim=None, apex=None):
@@ -199,6 +213,39 @@ def run_nn(args, mode, model, loader, criterion=None, optim=None, apex=None):
     }
 
     return result
+
+
+def main():
+    args = get_args()
+    data_dir = args.data_dir
+    test_dir = "%s/bounding_box_test" % data_dir
+    gt_query_dir = "%s/gt_query" % data_dir
+
+    if args.use_gpu:
+        torch.cuda.set_device(args.gpu)
+
+    all_files = os.listdir(test_dir)
+    all_files = sorted(all_files)
+    # id = 6619
+    # filename = all_files[id]
+    # img_path = "%s/%s" % (test_dir, filename)
+    # print(filename)
+    # display_image(img_path)
+    test_df = get_dataset_df(args)
+    test_transforms = get_transforms(args)
+    test_dataset = TestDataset(args, test_df, test_transforms)
+    test_dataloader = torch.utils.data.DataLoader(test_dataset,
+                                                   batch_size=args.batch_size,
+                                                   num_workers=args.num_workers)
+    query, shot, images, ids = next(iter(test_dataloader))
+    # print(query, shot, images, ids)
+    model = get_model(args)
+    result = run_nn(args, 'test', model, test_dataloader)
+    with open("%s/preds_out.pkl" % args.outdir, "wb") as fb:
+        pickle.dump(result, fb)
+    with open("%s/preds_out.pkl" % args.outdir, "rb") as fb:
+        result = pickle.load(fb)
+    compute_mAP(result, gt_query_dir)
 
 
 if __name__ == '__main__':
