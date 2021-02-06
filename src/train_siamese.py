@@ -149,7 +149,6 @@ def train(args, model, train_dataset, val_dataset, train_dataloader, val_dataloa
 
     best = {
         'loss': float('inf'),
-        'accuracy': 0.0,
         'epoch': -1,
     }
 
@@ -157,7 +156,6 @@ def train(args, model, train_dataset, val_dataset, train_dataloader, val_dataloa
         detail = load_model(args.resume_from, model, optim=optimizer)
         best.update({
             'loss': detail['loss'],
-            'accuracy': detail['accuracy'],
             'epoch': detail['epoch']
         })
 
@@ -176,14 +174,13 @@ def train(args, model, train_dataset, val_dataset, train_dataloader, val_dataloa
             val = run_nn(args, 'valid', model, val_dataloader, criterion)
 
         detail = {
-            'accuracy': val['acc'],
             'loss': val['loss'],
             'epoch': epoch,
         }
         if val['loss'] <= best['loss']:
             best.update(detail)
         save_model(model, optimizer, detail)
-        log('[best] ep:%d loss:%.4f accuracy:%.4f' % (best['epoch'], best['loss'], best['accuracy']))
+        log('[best] ep:%d loss:%.4f' % (best['epoch'], best['loss']))
         scheduler.step()
 
 
