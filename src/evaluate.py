@@ -73,8 +73,8 @@ def compute_mAP(result, gt_query_dir):
     }
     """
     dist_mat = {}
-    for query, shot, dist, shot_id in zip(
-            result['ids_1'], result['ids_2'], result['distances'], result['shot_ids']):
+    for query, shot, dist, shot_id in tqdm(zip(
+            result['ids_1'], result['ids_2'], result['distances'], result['shot_ids']), total=len(result['ids_1'])):
         query_name = query.split('.')[0]
         if query_name not in dist_mat:
             dist_mat[query_name] = np.full(shape=20000, fill_value=np.inf)
@@ -88,8 +88,13 @@ def compute_mAP(result, gt_query_dir):
             dist_mat[query_name][index] = np.inf
         sorted_indices = np.argsort(dist_mat[query_name])
 
-        sorted_indices = np.array([True if (x in good_indices) else False for x in sorted_indices])
-        rows_good = np.argwhere(sorted_indices)
+        # sorted_indices = np.array([True if (x in good_indices) else False for x in sorted_indices])
+        mask = np.in1d(sorted_indices, good_indices)
+        # print(sorted_indices)
+        # print(good_indices)
+        # print(mask)
+        rows_good = np.argwhere(mask)
+        print(rows_good)
         ngood = len(good_indices)
         rows_good = rows_good.flatten()
         ap = 0
