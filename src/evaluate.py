@@ -88,7 +88,7 @@ def compute_mAP(result, gt_query_dir):
         for index in junk_indices:
             dist_mat[query_name][index] = np.inf
         sorted_indices = np.argsort(dist_mat[query_name])
-        print(sorted_indices)
+
         sorted_indices = np.array([True if (x in good_indices) else False for x in sorted_indices])
         rows_good = np.argwhere(sorted_indices)
         ngood = len(good_indices)
@@ -240,9 +240,9 @@ def main():
     query, shot, images, ids = next(iter(test_dataloader))
     # print(query, shot, images, ids)
     model = get_model(args)
-    result = run_nn(args, 'test', model, test_dataloader)
-    with open("%s/preds_out.pkl" % args.outdir, "wb") as fb:
-        pickle.dump(result, fb)
+    # result = run_nn(args, 'test', model, test_dataloader)
+    # with open("%s/preds_out.pkl" % args.outdir, "wb") as fb:
+    #     pickle.dump(result, fb)
     with open("%s/preds_out.pkl" % args.outdir, "rb") as fb:
         result = pickle.load(fb)
     compute_mAP(result, gt_query_dir)
