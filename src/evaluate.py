@@ -106,7 +106,8 @@ def get_model(args):
                      fc_in_features=2048,
                      out_features=512,
                      backbone="resnet50")
-    load_model(args.snapshot, model, args.use_gpu)
+    if args.snapshot:
+        load_model(args.snapshot, model, args.use_gpu)
     return model
 
 
