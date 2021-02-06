@@ -75,7 +75,6 @@ def compute_mAP(result, gt_query_dir):
     dist_mat = {}
     for query, shot, dist, shot_id in zip(
             result['ids_1'], result['ids_2'], result['distances'], result['shot_ids']):
-        print(query, shot, dist, shot_id)
         query_name = query.split('.')[0]
         if query_name not in dist_mat:
             dist_mat[query_name] = np.full(shape=20000, fill_value=np.inf)
