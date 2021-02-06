@@ -159,7 +159,7 @@ def get_dataset_df(args):
     df_test = {"query": [], "shot": [], "shot_id": []}
     gallery_dir_files = sorted(os.listdir(gallery_dir))
     for query in tqdm(os.listdir(query_dir)[:args.query_num]):
-        for id, shot in enumerate(gallery_dir_files[:20]):
+        for id, shot in enumerate(gallery_dir_files):
             if query.split('.')[-1] != 'jpg' or shot.split('.')[-1] != 'jpg':
                 continue
             df_test["query"].append(query)
