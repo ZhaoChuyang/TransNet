@@ -81,7 +81,7 @@ def compute_mAP(result, gt_query_dir):
         dist_mat[query_name][shot_id] = dist
 
     ap_all = []
-    for query in tqdm(result['ids_1']):
+    for query in tqdm(set(result['ids_1'])):
         query_name = query.split('.')[0]
         good_indices, junk_indices = get_indices(query_name, gt_query_dir)
         for index in junk_indices:
