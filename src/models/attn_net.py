@@ -48,12 +48,12 @@ class TransNet(nn.Module):
         log('backbone model: %s' % backbone)
         if backbone == 'resnet50':
             self.backbone = models.resnet50(pretrained=pretrained)
-            self.conv_stem = nn.Sequential(*list(self.backbone.children())[:-3])
-            self.cls_net = nn.Sequential(*list(self.backbone.children())[-3:-1])
+            self.conv_stem = nn.Sequential(*list(self.backbone.children())[:-2])
+            self.cls_net = nn.Sequential(*list(self.backbone.children())[-2:-1])
         if backbone == 'resnet34':
             self.backbone = models.resnet34(pretrained=pretrained)
-            self.conv_stem = nn.Sequential(*list(self.backbone.children())[:-3])
-            self.cls_net = nn.Sequential(*list(self.backbone.children())[-3:-1])
+            self.conv_stem = nn.Sequential(*list(self.backbone.children())[:-2])
+            self.cls_net = nn.Sequential(*list(self.backbone.children())[-2:-1])
 
         self.W_VA = nn.Conv1d(in_channels=conv_channels, out_channels=inner_channels, kernel_size=1, stride=1, padding=0)
         self.W_VB = nn.Conv1d(in_channels=conv_channels, out_channels=inner_channels, kernel_size=1, stride=1, padding=0)
@@ -140,7 +140,7 @@ class TransNet(nn.Module):
 if __name__ == '__main__':
     resnet = models.resnet50(pretrained=True)
     print(resnet)
-    resnet_conv = nn.Sequential(*list(resnet.children())[:-3])
+    resnet_conv = nn.Sequential(*list(resnet.children())[:-2])
     print(resnet_conv)
 
     input_1 = torch.randn(size=(2, 3, 256, 128))
@@ -204,7 +204,7 @@ if __name__ == '__main__':
     print(f"shape of O_A: {output_A.shape}")
     print(f"shape of O_B: {output_B.shape}")
 
-    resnet_cls = nn.Sequential(*list(resnet.children())[-3:-1])
+    resnet_cls = nn.Sequential(*list(resnet.children())[-2:-1])
     print(resnet_cls)
     output_A = output_A.view(batch_size, in_channels, features_h, features_w)
     output_B = output_B.view(batch_size, in_channels, features_h, features_w)
