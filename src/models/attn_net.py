@@ -21,7 +21,7 @@ class BaseNet(nn.Module):
         if backbone == 'resnet34':
             self.backbone = models.resnet34(pretrained=pretrained)
 
-        self.fc = nn.Linear(in_features=fc_in_features, out_features=out_features, bias=True)
+        self.backbone.fc = nn.Linear(in_features=fc_in_features, out_features=out_features, bias=True)
         # in_features = 2048, out_features = 512
 
     def forward(self, input_1, input_2):

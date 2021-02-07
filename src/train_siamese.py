@@ -206,8 +206,8 @@ def run_nn(args, mode, model, loader, criterion=None, optim=None, apex=None):
             inputs_2 = inputs_2.cuda()
             targets = targets.cuda()
 
-        for id1, id2, target in zip(ids[0], ids[1], targets):
-            print(id1, id2, target)
+        # for id1, id2, target in zip(ids[0], ids[1], targets):
+        #     print(id1, id2, target)
 
         batch_size = len(inputs_1)
         # NOTE: using cuda
