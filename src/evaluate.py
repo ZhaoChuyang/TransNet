@@ -247,22 +247,15 @@ def main():
     query, shot, images, ids = next(iter(test_dataloader))
     # print(query, shot, images, ids)
 
-    model = get_model(args)
-    model.eval()
-    dist = model(query, shot)
-    print(dist)
-    query, shot, images, ids = next(iter(test_dataloader))
-    dist = model(query, shot)
-    print(dist)
-    print(images)
-    # if args.run_nn:
-    #     model = get_model(args)
-    #     result = run_nn(args, 'test', model, test_dataloader)
-    #     with open("%s/preds_out.pkl" % args.outdir, "wb") as fb:
-    #         pickle.dump(result, fb)
-    # with open("%s/preds_out.pkl" % args.outdir, "rb") as fb:
-    #     result = pickle.load(fb)
-    # compute_mAP(result, gt_query_dir)
+    if args.run_nn:
+        model = get_model(args)
+        model.eval()
+        result = run_nn(args, 'test', model, test_dataloader)
+        with open("%s/preds_out.pkl" % args.outdir, "wb") as fb:
+            pickle.dump(result, fb)
+    with open("%s/preds_out.pkl" % args.outdir, "rb") as fb:
+        result = pickle.load(fb)
+    compute_mAP(result, gt_query_dir)
 
 
 if __name__ == '__main__':
