@@ -35,6 +35,7 @@ def get_args():
     parser.add_argument("--batch-size", type=int, default=50)
     parser.add_argument("--num-workers", type=int, default=0)
     parser.add_argument("--outdir", type=str, default="output")
+    parser.add_argument("--run-nn", type=bool, default=True)
     return parser.parse_args()
 
 
@@ -87,7 +88,9 @@ def compute_mAP(result, gt_query_dir):
         for index in junk_indices:
             dist_mat[query_name][index] = np.inf
         sorted_indices = np.argsort(dist_mat[query_name])
-
+        print(query)
+        sio.savemat("output/%s.mat" % query_name, {"vect": dist_mat[query_name]})
+        print(sorted_indices[:20])
         # sorted_indices = np.array([True if (x in good_indices) else False for x in sorted_indices])
         mask = np.in1d(sorted_indices, good_indices)
         # print(sorted_indices)
@@ -243,10 +246,11 @@ def main():
                                                    num_workers=args.num_workers)
     query, shot, images, ids = next(iter(test_dataloader))
     # print(query, shot, images, ids)
-    model = get_model(args)
-    # result = run_nn(args, 'test', model, test_dataloader)
-    # with open("%s/preds_out.pkl" % args.outdir, "wb") as fb:
-    #     pickle.dump(result, fb)
+    if args.run_nn:
+        model = get_model(args)
+        result = run_nn(args, 'test', model, test_dataloader)
+        with open("%s/preds_out.pkl" % args.outdir, "wb") as fb:
+            pickle.dump(result, fb)
     with open("%s/preds_out.pkl" % args.outdir, "rb") as fb:
         result = pickle.load(fb)
     compute_mAP(result, gt_query_dir)
