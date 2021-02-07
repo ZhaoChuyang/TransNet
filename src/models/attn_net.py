@@ -4,6 +4,37 @@ from torch import nn
 from ..utils.logger import log
 
 
+class BaseNet(nn.Module):
+    def __init__(self, in_channels, conv_channels, inner_channels, fc_in_features, out_features, backbone='resnet34', pretrained=True):
+        super(BaseNet, self).__init__()
+
+        self.in_channels = in_channels
+        self.conv_channels = conv_channels
+        self.inner_channels = inner_channels
+        self.fc_in_features = fc_in_features
+        self.out_features = out_features
+
+        log('backbone model: %s' % backbone)
+        if backbone == 'resnet50':
+            self.backbone = models.resnet50(pretrained=pretrained)
+
+        if backbone == 'resnet34':
+            self.backbone = models.resnet34(pretrained=pretrained)
+
+        self.fc = nn.Linear(in_features=fc_in_features, out_features=out_features, bias=True)
+        # in_features = 2048, out_features = 512
+
+    def forward(self, input_1, input_2):
+        batch_size = input_1.shape[0]
+
+        features_1 = self.backbone(input_1)
+        features_2 = self.backbone(input_2)
+
+        dist = torch.linalg.norm(features_1 - features_2, dim=1)
+        # output = self.sigmoid(dist)
+        return dist
+
+
 class TransNet(nn.Module):
     def __init__(self, in_channels, conv_channels, inner_channels, fc_in_features, out_features, backbone='resnet34', pretrained=True):
         super(TransNet, self).__init__()
@@ -105,6 +136,7 @@ class TransNet(nn.Module):
         return dist
 
 
+
 if __name__ == '__main__':
     resnet = models.resnet50(pretrained=True)
     print(resnet)
@@ -127,7 +159,7 @@ if __name__ == '__main__':
 
     # (B, C, N) <-> (1, 1024, 128)
     features_1 = torch.flatten(features_1, 2, -1)
-    features_2 = torch.flatten(features_1, 2, -1)
+    features_2 = torch.flatten(features_2, 2, -1)
     print(f'image 1 feature shape (flatten): {features_1.shape}')
     print(f'image 2 feature shape (flatten): {features_2.shape}')
     # define W_f, W_g and W_h as 1x1 conv

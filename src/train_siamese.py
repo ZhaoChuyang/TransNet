@@ -17,7 +17,7 @@ from torch.utils.tensorboard import SummaryWriter
 from .utils.logger import log, logger
 from .utils.util import save_model, load_model
 from .models.ft_net import ft_net
-from .models.attn_net import TransNet
+from .models.attn_net import TransNet, BaseNet
 
 
 
@@ -38,6 +38,7 @@ def get_args():
     parser.add_argument('--stride', default=2, type=int, help='stride')
     parser.add_argument('--gpu', type=int, default=0)
     parser.add_argument('--use-gpu', type=bool, default=False)
+    parser.add_argument('--model', type=str, default="TransNet")
     return parser.parse_args()
 
 
@@ -205,6 +206,9 @@ def run_nn(args, mode, model, loader, criterion=None, optim=None, apex=None):
             inputs_2 = inputs_2.cuda()
             targets = targets.cuda()
 
+        for id1, id2, target in zip(ids[0], ids[1], targets):
+            print(id1, id2, target)
+
         batch_size = len(inputs_1)
         # NOTE: using cuda
         outputs = model(inputs_1, inputs_2)
@@ -287,12 +291,20 @@ if __name__ == '__main__':
     # ids: list(tuple(input_1_ids), tuple(input_2_ids))
     print(input_1.shape, input_2.shape, targets.shape)
 
-    model = TransNet(in_channels=3,
-                     conv_channels=1024,
-                     inner_channels=512,
-                     fc_in_features=2048,
-                     out_features=512,
-                     backbone="resnet50")
+    if args.model == 'TransNet':
+        model = TransNet(in_channels=3,
+                         conv_channels=1024,
+                         inner_channels=512,
+                         fc_in_features=2048,
+                         out_features=512,
+                         backbone="resnet50")
+    else:
+        model = BaseNet(in_channels=3,
+                         conv_channels=1024,
+                         inner_channels=512,
+                         fc_in_features=2048,
+                         out_features=512,
+                         backbone="resnet50")
     if args.use_gpu:
         model.cuda()
     # outputs = model(input_1, input_2)
