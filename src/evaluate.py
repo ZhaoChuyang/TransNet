@@ -30,7 +30,7 @@ def get_args():
     parser.add_argument("--data-dir", type=str, default="data/Market-1501-v15.09.15")
     parser.add_argument("--use-gpu", type=bool, default=False)
     parser.add_argument("--gpu", type=int, default=0)
-    parser.add_argument("--snapshot", type=str, default="checkpoints/attn_siamese_ep0.pt")
+    parser.add_argument("--snapshot", type=str)
     parser.add_argument("--query-num", type=int, default=10)
     parser.add_argument("--batch-size", type=int, default=50)
     parser.add_argument("--num-workers", type=int, default=0)
@@ -155,7 +155,7 @@ def get_model(args):
                      fc_in_features=2048,
                      out_features=512,
                      backbone="resnet50")
-    if args.snapshot:
+    if args.snapshot :
         load_model(args.snapshot, model, args.use_gpu)
     return model
 
@@ -246,14 +246,23 @@ def main():
                                                    num_workers=args.num_workers)
     query, shot, images, ids = next(iter(test_dataloader))
     # print(query, shot, images, ids)
-    if args.run_nn:
-        model = get_model(args)
-        result = run_nn(args, 'test', model, test_dataloader)
-        with open("%s/preds_out.pkl" % args.outdir, "wb") as fb:
-            pickle.dump(result, fb)
-    with open("%s/preds_out.pkl" % args.outdir, "rb") as fb:
-        result = pickle.load(fb)
-    compute_mAP(result, gt_query_dir)
+
+    model = get_model(args)
+    model.eval()
+    dist = model(query, shot)
+    print(dist)
+    query, shot, images, ids = next(iter(test_dataloader))
+    dist = model(query, shot)
+    print(dist)
+    print(images)
+    # if args.run_nn:
+    #     model = get_model(args)
+    #     result = run_nn(args, 'test', model, test_dataloader)
+    #     with open("%s/preds_out.pkl" % args.outdir, "wb") as fb:
+    #         pickle.dump(result, fb)
+    # with open("%s/preds_out.pkl" % args.outdir, "rb") as fb:
+    #     result = pickle.load(fb)
+    # compute_mAP(result, gt_query_dir)
 
 
 if __name__ == '__main__':

@@ -48,7 +48,7 @@ class TransNet(nn.Module):
         # log(f'image 2 feature map shape: {features_2.shape}')
         # (B, C, N) <-> (1, 1024, 128)
         features_1 = torch.flatten(features_1, 2, -1)
-        features_2 = torch.flatten(features_1, 2, -1)
+        features_2 = torch.flatten(features_2, 2, -1)
         # log(f'image 1 feature shape (flatten): {features_1.shape}')
         # log(f'image 2 feature shape (flatten): {features_2.shape}')
         # define W_f, W_g and W_h as 1x1 conv
@@ -195,5 +195,4 @@ if __name__ == '__main__':
     features_B = fc(features_B)
 
     dist = torch.linalg.norm(features_A - features_B, dim=1)
-    sigmoid = torch.nn.Sigmoid()
-    output = sigmoid(dist)
+    print(dist)
