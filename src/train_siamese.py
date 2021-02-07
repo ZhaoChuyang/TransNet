@@ -293,14 +293,14 @@ if __name__ == '__main__':
 
     if args.model == 'TransNet':
         model = TransNet(in_channels=3,
-                         conv_channels=1024,
+                         conv_channels=2048,
                          inner_channels=512,
                          fc_in_features=2048,
                          out_features=512,
                          backbone="resnet50")
     else:
         model = BaseNet(in_channels=3,
-                         conv_channels=1024,
+                         conv_channels=2048,
                          inner_channels=512,
                          fc_in_features=2048,
                          out_features=512,

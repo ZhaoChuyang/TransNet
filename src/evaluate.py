@@ -260,29 +260,29 @@ def main():
 
 if __name__ == '__main__':
     print(sys.argv)
-    # main()
-    args = get_args()
-    data_dir = args.data_dir
-    test_dir = "%s/bounding_box_test" % data_dir
-    all_files = os.listdir(test_dir)
-    all_files = sorted(all_files)
-    test_transforms = get_transforms(args)
-    id = 15527
-    filename = all_files[id]
-    query_name = "1457_c6s3_082067_00.jpg"
-    # img_path = "%s/%s" % (test_dir, filename)
+    main()
+    # args = get_args()
+    # data_dir = args.data_dir
+    # test_dir = "%s/bounding_box_test" % data_dir
+    # all_files = os.listdir(test_dir)
+    # all_files = sorted(all_files)
+    # test_transforms = get_transforms(args)
+    # id = 15527
+    # filename = all_files[id]
+    # query_name = "1457_c6s3_082067_00.jpg"
+    # # img_path = "%s/%s" % (test_dir, filename)
+    # # print(filename)
+    # # display_image(img_path)
+    # image_path_2 = "%s/%s" % (test_dir, filename)
+    # image_path_1 = "%s/query/%s" % (data_dir, query_name)
+    # image_1 = PIL.Image.open(image_path_1)
+    # image_2 = PIL.Image.open(image_path_2)
+    # image_1_ten = test_transforms(image_1)
+    # image_2_ten = test_transforms(image_2)
+    # image_1_ten = image_1_ten.unsqueeze(0)
+    # image_2_ten = image_2_ten.unsqueeze(0)
+    # model = get_model(args)
+    # model.eval()
+    # dist = model(image_1_ten, image_2_ten)
     # print(filename)
-    # display_image(img_path)
-    image_path_2 = "%s/%s" % (test_dir, filename)
-    image_path_1 = "%s/query/%s" % (data_dir, query_name)
-    image_1 = PIL.Image.open(image_path_1)
-    image_2 = PIL.Image.open(image_path_2)
-    image_1_ten = test_transforms(image_1)
-    image_2_ten = test_transforms(image_2)
-    image_1_ten = image_1_ten.unsqueeze(0)
-    image_2_ten = image_2_ten.unsqueeze(0)
-    model = get_model(args)
-    model.eval()
-    dist = model(image_1_ten, image_2_ten)
-    print(filename)
-    print(dist)
+    # print(dist)

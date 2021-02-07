@@ -165,6 +165,7 @@ if __name__ == '__main__':
     # define W_f, W_g and W_h as 1x1 conv
     # NOTE: change conv1d to conv2d?
     in_channels = features_1.shape[1]
+    print(in_channels)
     print(f"stem output channels: {features_1.shape[1]}")
     out_channels = 512
     W_VA = nn.Conv1d(in_channels=in_channels, out_channels=out_channels, kernel_size=1, stride=1, padding=0)
