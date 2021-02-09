@@ -44,19 +44,13 @@ def get_args():
     return parser.parse_args()
 
 
-
-
-
-
-
-
-
 def train(args, model, train_dataloader, val_dataloader):
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9)
 
     best = {
         'loss': float('inf'),
         'epoch': -1,
+        'accuracy': 0,
     }
 
     if args.resume_from:
@@ -85,7 +79,7 @@ def train(args, model, train_dataloader, val_dataloader):
         }
         if val['accuracy'] <= best['accuracy']:
             best.update(detail)
-        save_model(model, optimizer, detail)
+        save_model(model, optimizer, "base_transformer", detail)
         log('[best] ep:%d loss:%.4f accuracy:%.4f' % (best['epoch'], best['loss'], best['accuracy']))
         scheduler.step()
 

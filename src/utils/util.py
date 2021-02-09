@@ -2,8 +2,8 @@ import torch
 from .logger import log, logger
 
 
-def save_model(model, optim, detail):
-    path = "checkpoints/attn_siamese_ep%d.pt" % detail['epoch']
+def save_model(model, optim, name, detail):
+    path = "checkpoints/%s_ep%d.pt" % (name, detail['epoch'])
     torch.save({
         "model": model.state_dict(),
         "optim": optim.state_dict(),
