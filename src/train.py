@@ -17,7 +17,8 @@ from torch.utils.tensorboard import SummaryWriter
 from .utils.logger import log, logger
 from .utils.util import save_model, load_model
 from .utils.config import Config
-from .models.transformer import BaseVit
+from src.models.transformer import BaseVit
+from src.models.ft_net import ft_net
 from src import factory
 
 
@@ -40,7 +41,7 @@ def get_args():
     parser.add_argument('--stride', default=2, type=int, help='stride')
     parser.add_argument('--gpu', type=int, default=0)
     parser.add_argument('--use-gpu', type=bool, default=False)
-    parser.add_argument('--model', type=str, default="TransNet")
+    parser.add_argument('--model', type=str, default="BaseViT")
     return parser.parse_args()
 
 
@@ -154,13 +155,18 @@ def main():
     cfg.gpu = args.gpu
     cfg.lr = args.lr
     cfg.epoch = args.epoch
+    cfg.model = args.model
 
     train_dataloader = factory.get_dataloader(cfg.data.train)
     valid_dataloader = factory.get_dataloader(cfg.data.valid)
     train_dataset = factory.get_dataset_df(cfg.data.train)
     num_classes = len(train_dataset['target'].unique())
 
-    model = BaseVit(cfg.imgsize[0], cfg.patch_size, num_classes=num_classes)
+    if cfg.model == 'BaseViT':
+        model = BaseVit(cfg.imgsize[0], cfg.patch_size, num_classes=num_classes)
+    elif cfg.model == 'ft_net':
+        model = ft_net(num_classes)
+
     if cfg.use_gpu:
         torch.cuda.set_device(cfg.gpu)
         model.cuda()
