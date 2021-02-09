@@ -16,6 +16,7 @@ normalize = dict(name='Normalize', params=dict(mean=[0.485, 0.456, 0.406], std=[
 
 data = dict(
     train_all=dict(
+        class_map='./cache/train_class_map.pkl',
         dataset_type='CustomDataset',
         imgdir='./data/Market-1501-v15.09.15/pytorch/train_all',
         imgsize=imgsize,
@@ -29,6 +30,7 @@ data = dict(
         )
     ),
     train=dict(
+        class_map='./cache/train_class_map.pkl',
         dataset_type='CustomDataset',
         imgdir='./data/Market-1501-v15.09.15/pytorch/train',
         imgsize=imgsize,
@@ -42,6 +44,7 @@ data = dict(
         )
     ),
     valid=dict(
+        class_map='./cache/train_class_map.pkl',
         dataset_type='CustomDataset',
         imgdir='./data/Market-1501-v15.09.15/pytorch/val',
         imgsize=imgsize,

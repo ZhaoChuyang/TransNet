@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import pickle
 from torch.utils.data import DataLoader
 import torchvision.transforms as T
 import src.dataset.custom_dataset
@@ -9,16 +10,13 @@ def get_dataset_df(cfg):
     if cfg.dataset_type == 'CustomDataset':
         dataset = {"target": [], "path": [], "id": []}
         dataset_path = cfg.imgdir
-        class_map = {}
-        cnt = 0
+        with open(cfg.class_map, 'rb') as fb:
+            class_map = pickle.load(fb)
         for root, dirs, files in os.walk(dataset_path):
             for file in files:
                 if file.split('.')[-1] != 'jpg':
                     continue
                 target = file.split('_')[0]
-                if target not in class_map:
-                    class_map[target] = cnt
-                    cnt += 1
                 target = class_map[target]
                 id = file.split('.')[0]
                 path = "%s/%s" % (root, file)

@@ -124,6 +124,10 @@ def run_nn(cfg, mode, model, loader, criterion=None, optim=None, apex=None):
             outputs = np.argmax(outputs.cpu().numpy(), axis=1)
             outputs_all.extend(outputs)
             ids_all.extend(ids)
+            print(targets.cpu().numpy())
+            print(ids)
+            print(outputs)
+            exit(0)
 
         elapsed = int(time.time() - t1)
         eta = int(elapsed / (i + 1) * (len(loader) - (i + 1)))
