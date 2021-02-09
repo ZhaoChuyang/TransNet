@@ -77,7 +77,7 @@ def train(args, model, train_dataloader, val_dataloader):
             'epoch': epoch,
             'accuracy': val['accuracy'],
         }
-        if val['accuracy'] <= best['accuracy']:
+        if val['accuracy'] >= best['accuracy']:
             best.update(detail)
         save_model(model, optimizer, "base_transformer", detail)
         log('[best] ep:%d loss:%.4f accuracy:%.4f' % (best['epoch'], best['loss'], best['accuracy']))
@@ -120,7 +120,8 @@ def run_nn(cfg, mode, model, loader, criterion=None, optim=None, apex=None):
 
         with torch.no_grad():
             targets_all.extend(targets.cpu().numpy())
-            outputs_all.extend(outputs.cpu().numpy())
+            outputs = np.argmax(outputs.cpu().numpy(), axis=1)
+            outputs_all.extend(outputs)
             ids_all.extend(ids)
 
         elapsed = int(time.time() - t1)
@@ -137,7 +138,7 @@ def run_nn(cfg, mode, model, loader, criterion=None, optim=None, apex=None):
     }
 
     if mode in ['train', 'valid']:
-        accuracy = np.sum(result['targets'] == np.round(result['outputs'])) / len(result['targets'])
+        accuracy = np.sum(result['targets'] == result['outputs']) / len(result['targets'])
         result.update({'accuracy': accuracy})
 
     return result
