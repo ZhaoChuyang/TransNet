@@ -166,6 +166,9 @@ def main():
     num_classes = len(train_dataset['target'].unique())
 
     model = BaseVit(cfg.imgsize[0], cfg.patch_size, num_classes=num_classes)
+    if cfg.use_gpu:
+        torch.cuda.set_device(cfg.gpu)
+        model.cuda()
     train(cfg, model, train_dataloader, valid_dataloader)
 
 
