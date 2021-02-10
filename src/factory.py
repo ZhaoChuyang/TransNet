@@ -33,7 +33,7 @@ def get_dataset_df(cfg):
         dataset = {'path': [], 'id': [], 'is_query': [], 'index': []}
         query_dir = cfg.query_dir
         gallery_dir = cfg.gallery_dir
-        for file in os.listdir(query_dir)[:10]:
+        for file in os.listdir(query_dir):
             if file.split('.')[-1] != 'jpg':
                 continue
             path = "%s/%s" % (query_dir, file)
@@ -46,7 +46,7 @@ def get_dataset_df(cfg):
             dataset['index'].append(index)
 
         # remove non-pictures and sort gallery files
-        gallery_files = os.listdir(gallery_dir)[:10]
+        gallery_files = os.listdir(gallery_dir)
         for file in gallery_files:
             if file.split('.')[-1] != 'jpg':
                 gallery_files.remove(file)
