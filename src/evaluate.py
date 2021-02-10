@@ -260,19 +260,19 @@ def main():
 
 if __name__ == '__main__':
     print(sys.argv)
-    main()
-    # args = get_args()
-    # data_dir = args.data_dir
-    # test_dir = "%s/bounding_box_test" % data_dir
-    # all_files = os.listdir(test_dir)
-    # all_files = sorted(all_files)
-    # test_transforms = get_transforms(args)
-    # id = 15527
-    # filename = all_files[id]
-    # query_name = "1457_c6s3_082067_00.jpg"
-    # # img_path = "%s/%s" % (test_dir, filename)
-    # # print(filename)
-    # # display_image(img_path)
+    # main()
+    args = get_args()
+    data_dir = args.data_dir
+    test_dir = "%s/bounding_box_test" % data_dir
+    all_files = os.listdir(test_dir)
+    all_files = sorted(all_files)
+    test_transforms = get_transforms(args)
+    id = 6625
+    filename = all_files[id]
+    query_name = "1457_c6s3_082067_00.jpg"
+    img_path = "%s/%s" % (test_dir, filename)
+    print(filename)
+    display_image(img_path)
     # image_path_2 = "%s/%s" % (test_dir, filename)
     # image_path_1 = "%s/query/%s" % (data_dir, query_name)
     # image_1 = PIL.Image.open(image_path_1)

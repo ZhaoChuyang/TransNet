@@ -74,10 +74,11 @@ def get_gt_query(cfg):
         type = filename_without_extension.split('_')[-1]
         if id not in result:
             result[id] = {}
+        # Index is starting from 1...
         if type == 'good':
-            result[id][type] = sio.loadmat("%s/%s" % (dir, file))['good_index'].squeeze(0)
+            result[id][type] = sio.loadmat("%s/%s" % (dir, file))['good_index'].squeeze(0) - 1
         else:
-            result[id][type] = sio.loadmat("%s/%s" % (dir, file))['junk_index'].squeeze(0)
+            result[id][type] = sio.loadmat("%s/%s" % (dir, file))['junk_index'].squeeze(0) - 1
     return result
 
 

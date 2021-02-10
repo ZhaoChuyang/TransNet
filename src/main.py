@@ -61,6 +61,7 @@ def test(cfg, model):
 
     loader_test = factory.get_dataloader(cfg.data.test)
     gt_query = factory.get_gt_query(cfg)
+    t1 = time.time()
 
     query_outputs = []
     gallery_outputs = []
@@ -68,7 +69,7 @@ def test(cfg, model):
     gallery_ids = []
     gallery_indices = []
 
-    for inputs, ids, is_query, indices in loader_test:
+    for i, inputs, ids, is_query, indices in enumerate(loader_test):
         if cfg.use_gpu:
             inputs = inputs.cuda()
         outputs = model(inputs)
@@ -85,8 +86,14 @@ def test(cfg, model):
                 gallery_ids.append(id)
                 gallery_indices.append(index)
 
+        elapsed = int(time.time() - t1)
+        eta = int(elapsed / (i + 1) * (len(loader_test) - (i + 1)))
+        progress = f'\r[test] {i + 1}/{len(loader_test)} {elapsed}(s) eta:{eta}(s)\n'
+        print(progress, end='')
+        sys.stdout.flush()
+
     gallery_size = len(gallery_outputs)
-    for query_id, query_output in zip(query_ids, query_outputs):
+    for query_id, query_output in tqdm(zip(query_ids, query_outputs), total=len(query_ids)):
         dist_vec = [0] * gallery_size
         for gallery_output, gallery_index in zip(gallery_outputs, gallery_indices):
             dist_vec[gallery_index] = gallery_output
