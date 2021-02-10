@@ -36,7 +36,7 @@ def get_args():
     parser.add_argument('--n-classes', type=int, default=-1)
     parser.add_argument('--epoch', type=int, default=3)
     parser.add_argument('--resume-from', type=str, default=None)
-    parser.add_argument('--step-size', type=int, default=10)
+    parser.add_argument('--step-size', type=int, default=30)
     parser.add_argument('--train-all', type=bool, default=False)
     parser.add_argument('--snapshot', type=str)
     parser.add_argument('--lr', default=0.05, type=float, help='learning rate')
@@ -126,8 +126,8 @@ def test(cfg, model):
     print('mAP: %.3f' % np.mean(ap_all))
 
 
-def train(args, model, train_dataloader, val_dataloader):
-    optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9)
+def train(cfg, model, train_dataloader, val_dataloader):
+    optimizer = torch.optim.SGD(model.parameters(), lr=cfg.lr, momentum=0.9)
 
     best = {
         'loss': float('inf'),
@@ -135,8 +135,8 @@ def train(args, model, train_dataloader, val_dataloader):
         'accuracy': 0,
     }
 
-    if args.resume_from:
-        detail = util.load_model(args.resume_from, model, optim=optimizer)
+    if cfg.resume_from:
+        detail = util.load_model(cfg.resume_from, model, optim=optimizer)
         best.update({
             'loss': detail['loss'],
             'epoch': detail['epoch'],
@@ -147,12 +147,12 @@ def train(args, model, train_dataloader, val_dataloader):
     # criterion = torch.nn.BCELoss()
     criterion = torch.nn.CrossEntropyLoss()
 
-    for epoch in range(best['epoch']+1, args.epoch):
+    for epoch in range(best['epoch']+1, cfg.epoch):
         log(f'\n----- epoch {epoch} -----')
         # set seed
-        run_nn(args, 'train', model, train_dataloader, criterion, optimizer)
+        run_nn(cfg, 'train', model, train_dataloader, criterion, optimizer)
         with torch.no_grad():
-            val = run_nn(args, 'valid', model, val_dataloader, criterion)
+            val = run_nn(cfg, 'valid', model, val_dataloader, criterion)
 
         detail = {
             'loss': val['loss'],
@@ -161,7 +161,7 @@ def train(args, model, train_dataloader, val_dataloader):
         }
         if val['accuracy'] >= best['accuracy']:
             best.update(detail)
-        util.save_model(model, optimizer, args.model, detail)
+        util.save_model(model, optimizer, cfg.model, detail)
         log('[best] ep:%d loss:%.4f accuracy:%.4f' % (best['epoch'], best['loss'], best['accuracy']))
         scheduler.step()
 
@@ -237,6 +237,7 @@ def main():
     cfg.lr = args.lr
     cfg.epoch = args.epoch
     cfg.model = args.model
+    cfg.resume_from =args.resume_from
     if args.snapshot:
         cfg.snapshot = args.snapshot
     if args.num_classes:

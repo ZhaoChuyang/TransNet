@@ -1,5 +1,5 @@
 net_type = 'single'
-resume_from = None
+# resume_from = None
 gt_query_dir = './data/Market-1501-v15.09.15/gt_query'
 
 imgsize = (256, 256)
