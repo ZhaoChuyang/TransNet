@@ -230,7 +230,7 @@ def main():
     if args.snapshot:
         cfg.snapshot = args.snapshot
     if args.num_classes:
-        cfg.snapshot = args.num_classes
+        cfg.num_classes = args.num_classes
 
     if cfg.mode == 'train':
         train_dataloader = factory.get_dataloader(cfg.data.train)
