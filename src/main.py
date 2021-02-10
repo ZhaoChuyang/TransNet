@@ -45,7 +45,7 @@ def get_args():
     parser.add_argument('--gpu', type=int, default=0)
     parser.add_argument('--use-gpu', type=bool, default=False)
     parser.add_argument('--model', type=str, default="BaseViT")
-    parser.add_argument('--num_classes', type=int)
+    parser.add_argument('--num-classes', type=int)
     return parser.parse_args()
 
 
