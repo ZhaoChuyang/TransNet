@@ -36,7 +36,7 @@ def get_args():
     parser.add_argument('--n-classes', type=int, default=-1)
     parser.add_argument('--epoch', type=int, default=3)
     parser.add_argument('--resume-from', type=str, default=None)
-    parser.add_argument('--step-size', type=int, default=30)
+    parser.add_argument('--step-size', type=int, default=10)
     parser.add_argument('--train-all', type=bool, default=False)
     parser.add_argument('--snapshot', type=str)
     parser.add_argument('--lr', default=0.05, type=float, help='learning rate')
@@ -88,11 +88,12 @@ def test(cfg, model):
 
         elapsed = int(time.time() - t1)
         eta = int(elapsed / (i + 1) * (len(loader_test) - (i + 1)))
-        progress = f'\r[test] {i + 1}/{len(loader_test)} {elapsed}(s) eta:{eta}(s)\n'
+        progress = f'\r[test] {i + 1}/{len(loader_test)} {elapsed}(s) eta:{eta}(s) Take a break~\n'
         print(progress, end='')
         sys.stdout.flush()
 
     gallery_size = len(gallery_outputs)
+    ap_all = []
     for query_id, query_output in tqdm(zip(query_ids, query_outputs), total=len(query_ids)):
         dist_vec = [0] * gallery_size
         for gallery_output, gallery_index in zip(gallery_outputs, gallery_indices):
@@ -120,7 +121,9 @@ def test(cfg, model):
                 old_precision = 1.0
             ap = ap + d_recall * (old_precision + precision) / 2
 
-        print(ap)
+        ap_all.append(ap)
+
+    print('mAP: %.3f' % np.mean(ap_all))
 
 
 def train(args, model, train_dataloader, val_dataloader):
