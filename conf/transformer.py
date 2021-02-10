@@ -4,7 +4,7 @@ gt_query_dir = './data/Market-1501-v15.09.15/gt_query'
 
 imgsize = (256, 256)
 patch_size = 32
-batch_size = 32
+batch_size = 16
 num_workers = 0
 
 resize = dict(name='Resize', params=dict(size=imgsize, interpolation=3))

@@ -247,9 +247,9 @@ def main():
     if cfg.mode == 'test':
         loader_test = factory.get_dataloader(cfg.data.test)
         # num_classes takes no effect in test mode. But you should ensure
-        # this term is equal to the value you set for the training stage,
+        # this value is equal to the value you set in the training stage,
         # otherwise errors will raise when loading saved model weights.
-        num_classes = 11
+        num_classes = 751
 
         if cfg.model == 'BaseViT':
             model = BaseVit(cfg.imgsize[0], cfg.patch_size, num_classes=num_classes)
