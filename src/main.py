@@ -69,7 +69,7 @@ def test(cfg, model):
     gallery_ids = []
     gallery_indices = []
 
-    for i, inputs, ids, is_query, indices in enumerate(loader_test):
+    for i, (inputs, ids, is_query, indices) in enumerate(loader_test):
         if cfg.use_gpu:
             inputs = inputs.cuda()
         outputs = model(inputs)
