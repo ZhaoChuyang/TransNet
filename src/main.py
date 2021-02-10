@@ -45,6 +45,7 @@ def get_args():
     parser.add_argument('--gpu', type=int, default=0)
     parser.add_argument('--use-gpu', type=bool, default=False)
     parser.add_argument('--model', type=str, default="BaseViT")
+    parser.add_argument('--num_classes', type=int)
     return parser.parse_args()
 
 
@@ -68,6 +69,8 @@ def test(cfg, model):
     gallery_indices = []
 
     for inputs, ids, is_query, indices in loader_test:
+        if cfg.use_gpu:
+            inputs = inputs.cuda()
         outputs = model(inputs)
         with torch.no_grad():
             outputs = outputs.cpu().numpy()
@@ -226,6 +229,8 @@ def main():
     cfg.model = args.model
     if args.snapshot:
         cfg.snapshot = args.snapshot
+    if args.num_classes:
+        cfg.snapshot = args.num_classes
 
     if cfg.mode == 'train':
         train_dataloader = factory.get_dataloader(cfg.data.train)
@@ -249,7 +254,7 @@ def main():
         # num_classes takes no effect in test mode. But you should ensure
         # this value is equal to the value you set in the training stage,
         # otherwise errors will raise when loading saved model weights.
-        num_classes = 751
+        num_classes = cfg.num_classes
 
         if cfg.model == 'BaseViT':
             model = BaseVit(cfg.imgsize[0], cfg.patch_size, num_classes=num_classes)
