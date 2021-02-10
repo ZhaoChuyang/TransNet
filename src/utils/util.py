@@ -19,7 +19,7 @@ def load_model(path, model, use_gpu=False, optim=None):
     model.load_state_dict(state["model"])
     if optim:
         log("loading optim")
-        optim.load_state_dict(state["model"])
+        optim.load_state_dict(state["optim"])
     else:
         log("not loading optim")
     if use_gpu:
