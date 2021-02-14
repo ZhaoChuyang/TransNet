@@ -14,14 +14,16 @@ from torch.optim import lr_scheduler
 from torch import nn
 from torchvision import datasets, transforms
 from torch.utils.tensorboard import SummaryWriter
+from src.random_erasing import RandomErasing
+
 try:
     from apex import amp
 except ImportError:
     print('not import apex')
 
-from .utils.logger import log, logger
+from src.utils.logger import log, logger
 from src.utils import util
-from .utils.config import Config
+from src.utils.config import Config
 from src.models.transformer import BaseVit
 from src.models.ft_net import ft_net
 from src import factory
@@ -46,6 +48,7 @@ def get_args():
     parser.add_argument('--lr', default=0.05, type=float, help='learning rate')
     parser.add_argument('--droprate', type=float, default=0.5, help='drop rate')
     parser.add_argument('--stride', default=2, type=int, help='stride')
+    parser.add_argument('--warm-epoch', default=5, type=int)
     parser.add_argument('--gpu', type=int, default=0)
     parser.add_argument('--use-gpu', action='store_true')
     parser.add_argument('--apex', action='store_true')
@@ -139,7 +142,15 @@ def test(cfg, model):
 
 def train(cfg, model, train_dataloader, val_dataloader):
 
-    optimizer = torch.optim.SGD(model.parameters(), lr=cfg.lr, momentum=0.9)
+    # Be careful when change model!
+    ignored_params = list(map(id, model.classifier.parameters()))
+    base_params = filter(lambda p: id(p) not in ignored_params, model.parameters())
+    optimizer = torch.optim.SGD([
+        {'params': base_params, 'lr': 0.1 * cfg.lr},
+        {'params': model.classifier.parameters(), 'lr': cfg.lr}
+    ], weight_decay=5e-4, momentum=0.9, nesterov=True)
+
+    # optimizer = torch.optim.SGD(model.parameters(), lr=cfg.lr, momentum=0.9)
     criterion = torch.nn.CrossEntropyLoss()
 
     log('apex %s' % cfg.apex)
@@ -150,6 +161,7 @@ def train(cfg, model, train_dataloader, val_dataloader):
         'loss': float('inf'),
         'epoch': -1,
         'accuracy': 0,
+        'warm_up': 0.1,
     }
 
     if cfg.resume_from:
@@ -161,21 +173,27 @@ def train(cfg, model, train_dataloader, val_dataloader):
             'loss': detail['loss'],
             'epoch': detail['epoch'],
             'accuracy': detail['accuracy'],
+            'warm_up': detail['warm_up'],
         })
 
+    warm_up = best['warm_up']
+    warm_iteration = round(cfg.train_size / cfg.batch_size) * cfg.warm_epoch
     scheduler = lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
 
     for epoch in range(best['epoch']+1, cfg.epoch):
         log(f'\n----- epoch {epoch} -----')
         # set seed
-        run_nn(cfg, 'train', model, train_dataloader, criterion, optimizer, apex=cfg.apex)
+        if epoch < cfg.warm_epoch:
+            warm_up = min(1.0, warm_up + 0.9 / warm_iteration)
+        run_nn(cfg, 'train', model, train_dataloader, warm_up, criterion, optimizer, apex=cfg.apex)
         with torch.no_grad():
-            val = run_nn(cfg, 'valid', model, val_dataloader, criterion)
+            val = run_nn(cfg, 'valid', epoch, model, val_dataloader, criterion=criterion)
 
         detail = {
             'loss': val['loss'],
             'epoch': epoch,
             'accuracy': val['accuracy'],
+            'warm_up': warm_up,
         }
         if val['accuracy'] >= best['accuracy']:
             best.update(detail)
@@ -187,7 +205,7 @@ def train(cfg, model, train_dataloader, val_dataloader):
         scheduler.step()
 
 
-def run_nn(cfg, mode, model, loader, criterion=None, optim=None, apex=None):
+def run_nn(cfg, mode, model, loader, warm_up=None, criterion=None, optim=None, apex=None):
     if mode in ['train']:
         model.train()
     elif mode in ['valid', 'test']:
@@ -216,6 +234,8 @@ def run_nn(cfg, mode, model, loader, criterion=None, optim=None, apex=None):
                 losses.append(loss.item())
 
         if mode in ['train']:
+            if warm_up:
+                loss *= warm_up
             if apex:
                 with amp.scale_loss(loss, optim) as scaled_loss:
                     scaled_loss.backward()
@@ -264,6 +284,7 @@ def main():
     cfg.resume_from = args.resume_from
     cfg.apex = args.apex
     cfg.from_mat = args.from_mat
+    cfg.warm_epoch = args.warm_epoch
     if args.snapshot:
         cfg.snapshot = args.snapshot
     if args.num_classes:
@@ -274,7 +295,7 @@ def main():
         valid_dataloader = factory.get_dataloader(cfg.data.valid)
         train_dataset = factory.get_dataset_df(cfg.data.train)
         num_classes = len(train_dataset['target'].unique())
-
+        train_size = len(train_dataset)
         if cfg.model == 'BaseViT':
             model = BaseVit(cfg.imgsize[0], cfg.patch_size, num_classes=num_classes)
         elif cfg.model == 'ft_net':
@@ -283,7 +304,7 @@ def main():
         if cfg.use_gpu:
             torch.cuda.set_device(cfg.gpu)
             model.cuda()
-
+        cfg.train_size = train_size
         train(cfg, model, train_dataloader, valid_dataloader)
 
     if cfg.mode == 'test':

@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 import scipy.io as sio
 import torchvision.transforms as T
 import src.dataset.custom_dataset
+from src.random_erasing import RandomErasing
 
 
 def get_dataset_df(cfg):
@@ -125,6 +126,8 @@ def get_transforms(cfg):
         else:
             return eval(transform.name)
     transforms = [get_object(transform)(**transform.params) for transform in cfg.transforms]
+    if cfg.erasing_p:
+        transforms += [RandomErasing(probability=cfg.erasing_p, mean=[0.0, 0.0, 0.0])]
     return T.Compose(transforms)
 
 
