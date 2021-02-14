@@ -268,7 +268,8 @@ def main():
         cfg.snapshot = args.snapshot
     if args.num_classes:
         cfg.num_classes = args.num_classes
-
+    factory.get_gt_query(cfg)
+    exit(0)
     if cfg.mode == 'train':
         train_dataloader = factory.get_dataloader(cfg.data.train)
         valid_dataloader = factory.get_dataloader(cfg.data.valid)

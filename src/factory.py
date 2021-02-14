@@ -96,7 +96,8 @@ def get_gt_query(cfg):
             camera_id = file_without_ext.split('_')[1][1]
             gl.append(pid)
             gc.append(camera_id)
-
+        gl = np.array(gl)
+        gc = np.array(gc)
         for query in os.listdir(query_dir):
             if query.split('.')[-1] != 'jpg':
                 continue
@@ -105,7 +106,7 @@ def get_gt_query(cfg):
             query_camera_id = file_without_ext.split('_')[1][1]
             camera_index = np.argwhere(gc == query_camera_id)
             query_index = np.argwhere(gl == pid)
-            junk_index1 = np.argwhere(gl == -1)
+            junk_index1 = np.argwhere(gl == '-1')
             junk_index2 = np.intersect1d(query_index, camera_index)
             junk_index = np.append(junk_index2, junk_index1)
             good_index = np.setdiff1d(query_index, camera_index, assume_unique=True)
