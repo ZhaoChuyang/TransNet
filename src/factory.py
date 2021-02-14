@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import numpy as np
 import pickle
 from torch.utils.data import DataLoader
 import scipy.io as sio
@@ -64,21 +65,53 @@ def get_dataset_df(cfg):
 
 
 def get_gt_query(cfg):
-    dir = cfg.gt_query_dir
     result = {}
-    for file in os.listdir(dir):
-        if file.split('.')[-1] != 'mat':
-            continue
-        filename_without_extension = file.split('.')[0]
-        id = '_'.join(filename_without_extension.split('_')[:-1])
-        type = filename_without_extension.split('_')[-1]
-        if id not in result:
-            result[id] = {}
-        # Index is starting from 1 (^_^)
-        if type == 'good':
-            result[id][type] = sio.loadmat("%s/%s" % (dir, file))['good_index'].squeeze(0) - 1
-        else:
-            result[id][type] = sio.loadmat("%s/%s" % (dir, file))['junk_index'].squeeze(0) - 1
+    if cfg.from_mat:
+        dir = cfg.gt_query_dir
+        for file in os.listdir(dir):
+            if file.split('.')[-1] != 'mat':
+                continue
+            filename_without_extension = file.split('.')[0]
+            id = '_'.join(filename_without_extension.split('_')[:-1])
+            type = filename_without_extension.split('_')[-1]
+            if id not in result:
+                result[id] = {}
+            # Index is starting from 1 (^_^)
+            if type == 'good':
+                result[id][type] = sio.loadmat("%s/%s" % (dir, file))['good_index'].squeeze(0) - 1
+            else:
+                result[id][type] = sio.loadmat("%s/%s" % (dir, file))['junk_index'].squeeze(0) - 1
+    else:
+        query_dir = cfg.query_dir
+        gallery = cfg.gallery
+        gallery = sorted(os.listdir(gallery))
+
+        gl = []
+        gc = []
+        for img in gallery:
+            if img.split('.')[-1] != 'jpg':
+                continue
+            file_without_ext = img.split('.')[0]
+            pid = file_without_ext.split('_')[0]
+            camera_id = file_without_ext.split('_')[1][1]
+            gl.append(pid)
+            gc.append(camera_id)
+
+        for query in os.listdir(query_dir):
+            if query.split('.')[-1] != 'jpg':
+                continue
+            file_without_ext = query.split('.')[0]
+            pid = file_without_ext.split('_')[0]
+            query_camera_id = file_without_ext.split('_')[1][1]
+            camera_index = np.argwhere(gc == query_camera_id)
+            query_index = np.argwhere(gl == pid)
+            junk_index1 = np.argwhere(gl == -1)
+            junk_index2 = np.intersect1d(query_index, camera_index)
+            junk_index = np.append(junk_index2, junk_index1)
+            good_index = np.setdiff1d(query_index, camera_index, assume_unique=True)
+            result[file_without_ext]['good'] = good_index
+            result[file_without_ext]['junk'] = junk_index
+
     return result
 
 

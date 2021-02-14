@@ -47,6 +47,7 @@ def get_args():
     parser.add_argument('--use-gpu', type=bool, default=False)
     parser.add_argument('--apex', type=bool, default=False)
     parser.add_argument('--model', type=str, default="BaseViT")
+    parser.add_argument('--from-mat', type=bool, default=True)
     parser.add_argument('--num-classes', type=int)
     return parser.parse_args()
 
@@ -105,10 +106,12 @@ def test(cfg, model):
         good_index = gt_query[query_id]['good']
         junk_index = gt_query[query_id]['junk']
 
-        dist_vec[junk_index] = np.inf
         sorted_indices = np.argsort(dist_vec)
+        mask = np.in1d(sorted_indices, junk_index, invert=True)
+        sorted_indices = sorted_indices[mask]
+
         mask = np.in1d(sorted_indices, good_index)
-        rows_good = np.argwhere(mask==True)
+        rows_good = np.argwhere(mask == True)
         rows_good = rows_good.flatten()
 
         ngood = len(good_index)
@@ -254,6 +257,7 @@ def main():
     cfg.model = args.model
     cfg.resume_from = args.resume_from
     cfg.apex = args.apex
+    cfg.from_mat = args.from_mat
     if args.snapshot:
         cfg.snapshot = args.snapshot
     if args.num_classes:

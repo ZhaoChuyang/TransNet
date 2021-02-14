@@ -1,6 +1,8 @@
 net_type = 'single'
 # resume_from = None
 gt_query_dir = './data/Market-1501-v15.09.15/gt_query'
+query_dir = './data/Market-1501-v15.09.15/query'
+gallery = './data/Market-1501-v15.09.15/bounding_box_test'
 
 imgsize = (256, 256)
 patch_size = 32
