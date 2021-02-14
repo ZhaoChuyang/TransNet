@@ -187,7 +187,7 @@ def train(cfg, model, train_dataloader, val_dataloader):
             warm_up = min(1.0, warm_up + 0.9 / warm_iteration)
         run_nn(cfg, 'train', model, train_dataloader, warm_up, criterion, optimizer, apex=cfg.apex)
         with torch.no_grad():
-            val = run_nn(cfg, 'valid', epoch, model, val_dataloader, criterion=criterion)
+            val = run_nn(cfg, 'valid', model, val_dataloader, criterion=criterion)
 
         detail = {
             'loss': val['loss'],
