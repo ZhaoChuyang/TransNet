@@ -292,7 +292,7 @@ def draw_curve(current_epoch):
     if current_epoch == 0:
         ax0.legend()
         ax1.legend()
-    fig.savefig(os.path.join('./model', name, 'train.jpg'))
+    fig.savefig(os.path.join('./output', name, 'train.jpg'))
 
 
 ######################################################################
