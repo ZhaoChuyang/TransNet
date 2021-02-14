@@ -177,7 +177,7 @@ def train(cfg, model, train_dataloader, val_dataloader):
         })
 
     warm_up = best['warm_up']
-    warm_iteration = round(cfg.train_size / cfg.batch_size) * cfg.warm_epoch
+    warm_iteration = len(train_dataloader) * cfg.warm_epoch
     scheduler = lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
 
     for epoch in range(best['epoch']+1, cfg.epoch):
@@ -288,17 +288,22 @@ def main():
     cfg.apex = args.apex
     cfg.from_mat = args.from_mat
     cfg.warm_epoch = args.warm_epoch
+    cfg.train_all = args.train_all
     if args.snapshot:
         cfg.snapshot = args.snapshot
     if args.num_classes:
         cfg.num_classes = args.num_classes
 
     if cfg.mode == 'train':
-        train_dataloader = factory.get_dataloader(cfg.data.train)
+        if cfg.train_all:
+            train_dataloader = factory.get_dataloader(cfg.data.train_all)
+            train_dataset = factory.get_dataset_df(cfg.data.train_all)
+        else:
+            train_dataloader = factory.get_dataloader(cfg.data.train)
+            train_dataset = factory.get_dataset_df(cfg.data.train)
         valid_dataloader = factory.get_dataloader(cfg.data.valid)
-        train_dataset = factory.get_dataset_df(cfg.data.train)
         num_classes = len(train_dataset['target'].unique())
-        train_size = len(train_dataset)
+
         if cfg.model == 'BaseViT':
             model = BaseVit(cfg.imgsize[0], cfg.patch_size, num_classes=num_classes)
         elif cfg.model == 'ft_net':
@@ -307,7 +312,7 @@ def main():
         if cfg.use_gpu:
             torch.cuda.set_device(cfg.gpu)
             model.cuda()
-        cfg.train_size = train_size
+
         train(cfg, model, train_dataloader, valid_dataloader)
 
     if cfg.mode == 'test':
