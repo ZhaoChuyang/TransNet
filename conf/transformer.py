@@ -49,6 +49,7 @@ data = dict(
         )
     ),
     valid=dict(
+        erasing_p=None,
         class_map='./cache/train_class_map.pkl',
         dataset_type='CustomDataset',
         imgdir='./data/Market-1501-v15.09.15/pytorch/val',
@@ -63,6 +64,7 @@ data = dict(
         )
     ),
     test=dict(
+        erasing_p=None,
         class_map='./cache/test_class_map.pkl',
         dataset_type='CustomTestDataset',
         query_dir='./data/Market-1501-v15.09.15/query',
