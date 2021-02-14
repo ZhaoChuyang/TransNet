@@ -14,7 +14,10 @@ from torch.optim import lr_scheduler
 from torch import nn
 from torchvision import datasets, transforms
 from torch.utils.tensorboard import SummaryWriter
-from apex import amp
+try:
+    from apex import amp
+except ImportError:
+    print('not import apex')
 
 from .utils.logger import log, logger
 from src.utils import util

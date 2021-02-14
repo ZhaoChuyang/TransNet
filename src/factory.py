@@ -82,6 +82,7 @@ def get_gt_query(cfg):
             else:
                 result[id][type] = sio.loadmat("%s/%s" % (dir, file))['junk_index'].squeeze(0) - 1
     else:
+        print("*************************")
         query_dir = cfg.query_dir
         gallery = cfg.gallery
         gallery = sorted(os.listdir(gallery))
@@ -109,6 +110,8 @@ def get_gt_query(cfg):
             junk_index2 = np.intersect1d(query_index, camera_index)
             junk_index = np.append(junk_index2, junk_index1)
             good_index = np.setdiff1d(query_index, camera_index, assume_unique=True)
+            if file_without_ext not in result:
+                result[file_without_ext] = {}
             result[file_without_ext]['good'] = good_index
             result[file_without_ext]['junk'] = junk_index
 
