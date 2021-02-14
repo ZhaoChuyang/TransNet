@@ -54,7 +54,10 @@ def get_args():
 
 def test(cfg, model):
     assert cfg.snapshot
-    util.load_model(cfg.snapshot, model, cfg.use_gpu)
+    if cfg.apex:
+        util.load_model(cfg.snapshot, model, cfg.use_gpu, amp=amp)
+    else:
+        util.load_model(cfg.snapshot, model, cfg.use_gpu)
     if cfg.model == 'ft_net':
         # This should output 512 dimensional features.
         model.classifier.classifier = nn.Sequential()
