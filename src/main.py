@@ -182,10 +182,13 @@ def train(cfg, model, train_dataloader, val_dataloader):
 
     for epoch in range(best['epoch']+1, cfg.epoch):
         log(f'\n----- epoch {epoch} -----')
-        # set seed
+        # set seed...
+        # warm up in first 5 epochs
         if epoch < cfg.warm_epoch:
             warm_up = min(1.0, warm_up + 0.9 / warm_iteration)
-        run_nn(cfg, 'train', model, train_dataloader, warm_up, criterion, optimizer, apex=cfg.apex)
+            run_nn(cfg, 'train', model, train_dataloader, warm_up=warm_up, criterion=criterion, optim=optimizer, apex=cfg.apex)
+        else:
+            run_nn(cfg, 'train', model, train_dataloader, criterion=criterion, optim=optimizer, apex=cfg.apex)
         with torch.no_grad():
             val = run_nn(cfg, 'valid', model, val_dataloader, criterion=criterion)
 
