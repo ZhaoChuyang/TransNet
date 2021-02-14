@@ -298,7 +298,7 @@ for query in os.listdir(query_dir):
     junk_index2 = np.intersect1d(query_index, camera_index)
     junk_index = np.append(junk_index2, junk_index1)
     good_index = np.setdiff1d(query_index, camera_index, assume_unique=True)
-    id = file_without_ext.split('_')[0]
+    id = int(file_without_ext.split('_')[0])
     if id not in gt_query:
         gt_query[id] = {}
     gt_query[id]['good'] = good_index
@@ -310,6 +310,7 @@ for query_feature, query_label, query_cam in tqdm(zip(result['query_f'], result[
     dist_vec = [0] * gallery_size
     for idx, (gallery_feature, gallery_label, gallery_cam) in tqdm(enumerate(zip(result['gallery_f'], result['gallery_label'], result['gallery_cam'])), total=len(result['gallery_f'])):
         dist_vec[idx] = gallery_feature
+    print(query_label)
     dist_vec = np.array(dist_vec)
     dist_vec = np.linalg.norm(dist_vec - query_feature, axis=1)
     good_index = gt_query[query_label]['good']
