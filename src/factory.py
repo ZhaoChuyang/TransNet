@@ -45,7 +45,7 @@ def get_dataset_df(cfg):
             dataset['is_query'].append(is_query)
             dataset['index'].append(index)
 
-        # remove non-pictures and sort gallery files
+        # remove non-pictures, then sort images in gallery
         gallery_files = os.listdir(gallery_dir)
         for file in gallery_files:
             if file.split('.')[-1] != 'jpg':
@@ -74,7 +74,7 @@ def get_gt_query(cfg):
         type = filename_without_extension.split('_')[-1]
         if id not in result:
             result[id] = {}
-        # Index is starting from 1...
+        # Index is starting from 1 (^_^)
         if type == 'good':
             result[id][type] = sio.loadmat("%s/%s" % (dir, file))['good_index'].squeeze(0) - 1
         else:

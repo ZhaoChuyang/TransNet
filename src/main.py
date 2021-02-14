@@ -14,6 +14,7 @@ from torch.optim import lr_scheduler
 from torch import nn
 from torchvision import datasets, transforms
 from torch.utils.tensorboard import SummaryWriter
+from apex import amp
 
 from .utils.logger import log, logger
 from src.utils import util
@@ -44,6 +45,7 @@ def get_args():
     parser.add_argument('--stride', default=2, type=int, help='stride')
     parser.add_argument('--gpu', type=int, default=0)
     parser.add_argument('--use-gpu', type=bool, default=False)
+    parser.add_argument('--apex', type=bool, default=False)
     parser.add_argument('--model', type=str, default="BaseViT")
     parser.add_argument('--num-classes', type=int)
     return parser.parse_args()
@@ -88,7 +90,7 @@ def test(cfg, model):
 
         elapsed = int(time.time() - t1)
         eta = int(elapsed / (i + 1) * (len(loader_test) - (i + 1)))
-        progress = f'\r[test] {i + 1}/{len(loader_test)} {elapsed}(s) eta:{eta}(s) Take a break~\n'
+        progress = f'\r[test] {i + 1}/{len(loader_test)} {elapsed}(s) eta:{eta}(s) Take a break\n'
         print(progress, end='')
         sys.stdout.flush()
 
@@ -123,11 +125,17 @@ def test(cfg, model):
 
         ap_all.append(ap)
 
-    print('mAP: %.3f' % np.mean(ap_all))
+    log('mAP: %.3f' % np.mean(ap_all))
 
 
 def train(cfg, model, train_dataloader, val_dataloader):
+
     optimizer = torch.optim.SGD(model.parameters(), lr=cfg.lr, momentum=0.9)
+    criterion = torch.nn.CrossEntropyLoss()
+
+    log('apex %s' % cfg.apex)
+    if cfg.apex:
+        amp.initialize(model, optimizer, opt_level='O1')
 
     best = {
         'loss': float('inf'),
@@ -136,7 +144,10 @@ def train(cfg, model, train_dataloader, val_dataloader):
     }
 
     if cfg.resume_from:
-        detail = util.load_model(cfg.resume_from, model, optim=optimizer)
+        if cfg.apex:
+            detail = util.load_model(cfg.resume_from, model, optim=optimizer, amp=amp)
+        else:
+            detail = util.load_model(cfg.resume_from, model, optim=optimizer)
         best.update({
             'loss': detail['loss'],
             'epoch': detail['epoch'],
@@ -144,13 +155,11 @@ def train(cfg, model, train_dataloader, val_dataloader):
         })
 
     scheduler = lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
-    # criterion = torch.nn.BCELoss()
-    criterion = torch.nn.CrossEntropyLoss()
 
     for epoch in range(best['epoch']+1, cfg.epoch):
         log(f'\n----- epoch {epoch} -----')
         # set seed
-        run_nn(cfg, 'train', model, train_dataloader, criterion, optimizer)
+        run_nn(cfg, 'train', model, train_dataloader, criterion, optimizer, apex=cfg.apex)
         with torch.no_grad():
             val = run_nn(cfg, 'valid', model, val_dataloader, criterion)
 
@@ -161,7 +170,10 @@ def train(cfg, model, train_dataloader, val_dataloader):
         }
         if val['accuracy'] >= best['accuracy']:
             best.update(detail)
-        util.save_model(model, optimizer, cfg.model, detail)
+        if cfg.apex:
+            util.save_model(model, optimizer, '%s_apex' % cfg.model, detail, amp=amp)
+        else:
+            util.save_model(model, optimizer, cfg.model, detail)
         log('[best] ep:%d loss:%.4f accuracy:%.4f' % (best['epoch'], best['loss'], best['accuracy']))
         scheduler.step()
 
@@ -195,8 +207,11 @@ def run_nn(cfg, mode, model, loader, criterion=None, optim=None, apex=None):
                 losses.append(loss.item())
 
         if mode in ['train']:
-            # NOTE: use apex here
-            loss.backward()
+            if apex:
+                with amp.scale_loss(loss, optim) as scaled_loss:
+                    scaled_loss.backward()
+            else:
+                loss.backward()
             optim.step()
             optim.zero_grad()
 
@@ -237,7 +252,8 @@ def main():
     cfg.lr = args.lr
     cfg.epoch = args.epoch
     cfg.model = args.model
-    cfg.resume_from =args.resume_from
+    cfg.resume_from = args.resume_from
+    cfg.apex = args.apex
     if args.snapshot:
         cfg.snapshot = args.snapshot
     if args.num_classes:
