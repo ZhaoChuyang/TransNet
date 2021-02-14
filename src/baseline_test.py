@@ -308,7 +308,7 @@ ap_all = []
 gallery_size = len(result['gallery_f'])
 for query_feature, query_label, query_cam in tqdm(zip(result['query_f'], result['query_label'], result['query_cam']), total=len(result['query_f'])):
     dist_vec = [0] * gallery_size
-    for idx, gallery_feature, gallery_label, gallery_cam in tqdm(enumerate(zip(result['gallery_f'], result['gallery_label'], result['gallery_cam']), total=len(result['gallery_f']))):
+    for idx, gallery_feature, gallery_label, gallery_cam in tqdm(enumerate(zip(result['gallery_f'], result['gallery_label'], result['gallery_cam'])), total=len(result['gallery_f'])):
         dist_vec[idx] = gallery_feature
     dist_vec = np.array(dist_vec)
     dist_vec = np.linalg.norm(dist_vec - query_feature, axis=1)
