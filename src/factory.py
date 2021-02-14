@@ -82,7 +82,6 @@ def get_gt_query(cfg):
             else:
                 result[id][type] = sio.loadmat("%s/%s" % (dir, file))['junk_index'].squeeze(0) - 1
     else:
-        print("*************************")
         query_dir = cfg.query_dir
         gallery = cfg.gallery
         gallery = sorted(os.listdir(gallery))
