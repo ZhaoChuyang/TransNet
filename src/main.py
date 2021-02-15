@@ -89,7 +89,19 @@ def test(cfg, model):
         ff = torch.FloatTensor(cfg.batch_size, 512).zero_().cuda()
         inputs_img = inputs.cuda()
 
-        outputs = model(inputs_img)
+        for i in range(2):
+            if (i == 1):
+                inputs = util.fliplr(inputs)
+            input_img = torch.Variable(inputs.cuda())
+            for scale in [1]:
+                if scale != 1:
+                    # bicubic is only  available in pytorch>= 1.1
+                    input_img = nn.functional.interpolate(input_img, scale_factor=scale, mode='bicubic',
+                                                          align_corners=False)
+                outputs = model(input_img)
+                ff += outputs
+
+        # outputs = model(inputs_img)
         # ff += outputs
         # inputs = util.fliplr(inputs)
         # outputs = model(inputs_img)
