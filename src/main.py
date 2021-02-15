@@ -60,7 +60,15 @@ def get_args():
 
 def test(cfg, model):
     assert cfg.snapshot
+    ignored_params = list(map(id, model.classifier.parameters()))
+    base_params = filter(lambda p: id(p) not in ignored_params, model.parameters())
+    optimizer = torch.optim.SGD([
+        {'params': base_params, 'lr': 0.1 * cfg.lr},
+        {'params': model.classifier.parameters(), 'lr': cfg.lr}
+    ], weight_decay=5e-4, momentum=0.9, nesterov=True)
+
     if cfg.apex:
+        amp.initialize(model, optimizer, opt_level='O1')
         util.load_model(cfg.snapshot, model, cfg.use_gpu, amp=amp)
     else:
         util.load_model(cfg.snapshot, model, cfg.use_gpu)
