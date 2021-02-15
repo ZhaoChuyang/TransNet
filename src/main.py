@@ -361,8 +361,8 @@ def main():
         if cfg.use_gpu:
             torch.cuda.set_device(cfg.gpu)
             model.cuda()
-
-        test(cfg, model)
+        with torch.no_grad():
+            test(cfg, model)
 
 
 if __name__ == '__main__':
