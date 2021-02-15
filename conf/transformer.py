@@ -6,7 +6,7 @@ gallery = './data/Market-1501-v15.09.15/bounding_box_test'
 
 imgsize = (256, 256)
 patch_size = 32
-batch_size = 16
+batch_size = 32
 num_workers = 0
 
 resize = dict(name='Resize', params=dict(size=imgsize, interpolation=3))

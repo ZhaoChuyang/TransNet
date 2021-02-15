@@ -86,7 +86,7 @@ def test(cfg, model):
     features = torch.FloatTensor()
     for i, (inputs, ids, is_query, indices) in enumerate(loader_test):
         # inputs: (b, c, h, w)
-        # ff = torch.FloatTensor(cfg.batch_size, 512).zero_().cuda()
+        ff = torch.FloatTensor(cfg.batch_size, 512).zero_().cuda()
         inputs_img = inputs.cuda()
 
         outputs = model(inputs_img)
