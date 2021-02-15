@@ -86,13 +86,14 @@ def test(cfg, model):
         # inputs: (b, c, h, w)
         ff = torch.FloatTensor(cfg.batch_size, 512).zero_()
         if cfg.use_gpu:
-            inputs = inputs.cuda()
             ff = ff.cuda()
-
-        outputs = model(inputs)
+            inputs_img = inputs.cuda()
+        else:
+            inputs_img = inputs
+        outputs = model(inputs_img)
         ff += outputs
         inputs = util.fliplr(inputs)
-        outputs = model(inputs)
+        outputs = model(inputs_img)
         ff += outputs
 
         fnorm = torch.norm(ff, p=2, dim=1, keepdim=True)
