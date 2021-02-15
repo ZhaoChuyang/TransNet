@@ -81,12 +81,26 @@ def test(cfg, model):
     gallery_ids = []
     gallery_indices = []
 
+    features = torch.FloatTensor()
     for i, (inputs, ids, is_query, indices) in enumerate(loader_test):
+        # inputs: (b, c, h, w)
+        ff = torch.FloatTensor(cfg.batch_size, 512).zero_()
         if cfg.use_gpu:
             inputs = inputs.cuda()
+            ff = ff.cuda()
+
         outputs = model(inputs)
+        ff += outputs
+        inputs = util.fliplr(inputs)
+        outputs = model(inputs)
+        ff += outputs
+
+        fnorm = torch.norm(ff, p=2, dim=1, keepdim=True)
+        ff = ff.div(fnorm.expand_as(ff))
+
         with torch.no_grad():
-            outputs = outputs.cpu().numpy()
+            outputs = ff.cpu().numpy()
+
         for output, id, label, index in zip(outputs, ids, is_query, indices):
             # query image
             if label == 1:
@@ -293,6 +307,11 @@ def main():
         cfg.snapshot = args.snapshot
     if args.num_classes:
         cfg.num_classes = args.num_classes
+
+    # loader = factory.get_dataloader(cfg.data.test)
+    # inputs, ids, is_query, indices = next(iter(loader))
+    # print(inputs.size())
+    # exit(0)
 
     if cfg.mode == 'train':
         if cfg.train_all:

@@ -40,3 +40,54 @@ def load_model(path, model, use_gpu=False, optim=None, amp=None):
     detail = state["detail"]
     log("loaded model from %s" % path)
     return detail
+
+
+def fliplr(img):
+    '''flip horizontal'''
+    inv_idx = torch.arange(img.size(3) - 1, -1, -1).long()  # N x C x H x W
+    img_flip = img.index_select(3, inv_idx)
+    return img_flip
+
+
+def get_features(cfg, model, loader):
+    features = torch.FloatTensor()
+    count = 0
+    for inputs, ids, is_query, indices in loader:
+        n, c, h, w = inputs.size()
+        count += n
+        # print(count)
+        ff = torch.FloatTensor(n, 512).zero_()
+        if cfg.use_gpu:
+            ff = ff.cuda()
+        # if opt.PCB:
+        #     ff = torch.FloatTensor(n, 2048, 6).zero_().cuda()  # we have six parts
+
+        for i in range(2):
+            if (i == 1):
+                inputs = fliplr(inputs)
+            if cfg.use_gpu:
+                input_img = inputs.cuda()
+            else:
+                input_img = inputs
+            # for scale in ms:
+            #     if scale != 1:
+            #         # bicubic is only  available in pytorch>= 1.1
+            #         input_img = nn.functional.interpolate(input_img, scale_factor=scale, mode='bicubic',
+            #                                               align_corners=False)
+            # using scale 1
+            outputs = model(input_img)
+            ff += outputs
+        # norm feature
+        # if opt.PCB:
+        #     # feature size (n,2048,6)
+        #     # 1. To treat every part equally, I calculate the norm for every 2048-dim part feature.
+        #     # 2. To keep the cosine score==1, sqrt(6) is added to norm the whole feature (2048*6).
+        #     fnorm = torch.norm(ff, p=2, dim=1, keepdim=True) * np.sqrt(6)
+        #     ff = ff.div(fnorm.expand_as(ff))
+        #     ff = ff.view(ff.size(0), -1)
+        # else:
+        fnorm = torch.norm(ff, p=2, dim=1, keepdim=True)
+        ff = ff.div(fnorm.expand_as(ff))
+
+        features = torch.cat((features, ff.data.cpu()), 0)
+    return features
