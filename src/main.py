@@ -89,29 +89,28 @@ def test(cfg, model):
         ff = torch.FloatTensor(cfg.batch_size, 512).zero_().cuda()
         inputs_img = inputs.cuda()
 
-        for i in range(2):
-            if (i == 1):
-                inputs = util.fliplr(inputs)
-            input_img = torch.autograd.Variable(inputs.cuda())
-            for scale in [1]:
-                if scale != 1:
-                    # bicubic is only  available in pytorch>= 1.1
-                    input_img = nn.functional.interpolate(input_img, scale_factor=scale, mode='bicubic',
-                                                          align_corners=False)
-                outputs = model(input_img)
-                ff += outputs
+        # for i in range(2):
+        #     if (i == 1):
+        #         inputs = util.fliplr(inputs)
+        #     input_img = torch.autograd.Variable(inputs.cuda())
+        #     for scale in [1]:
+        #         if scale != 1:
+        #             # bicubic is only  available in pytorch>= 1.1
+        #             input_img = nn.functional.interpolate(input_img, scale_factor=scale, mode='bicubic',
+        #                                                   align_corners=False)
+        #         outputs = model(input_img)
+        #         ff += outputs
 
-        # outputs = model(inputs_img)
-        # ff += outputs
-        # inputs = util.fliplr(inputs)
-        # outputs = model(inputs_img)
-        # ff += outputs
+        outputs = model(inputs_img)
+        ff += outputs
+        inputs = util.fliplr(inputs)
+        outputs = model(inputs_img)
+        ff += outputs
 
-        # fnorm = torch.norm(ff, p=2, dim=1, keepdim=True)
-        # ff = ff.div(fnorm.expand_as(ff))
+        fnorm = torch.norm(ff, p=2, dim=1, keepdim=True)
+        ff = ff.div(fnorm.expand_as(ff))
 
-        with torch.no_grad():
-            outputs = outputs.cpu().numpy()
+        outputs = ff.cpu().numpy()
 
         for output, id, label, index in zip(outputs, ids, is_query, indices):
             # query image
