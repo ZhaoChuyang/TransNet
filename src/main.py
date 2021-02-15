@@ -92,7 +92,7 @@ def test(cfg, model):
         for i in range(2):
             if (i == 1):
                 inputs = util.fliplr(inputs)
-            input_img = torch.Variable(inputs.cuda())
+            input_img = torch.autograd.Variable(inputs.cuda())
             for scale in [1]:
                 if scale != 1:
                     # bicubic is only  available in pytorch>= 1.1
