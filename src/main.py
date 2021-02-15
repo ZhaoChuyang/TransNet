@@ -86,7 +86,9 @@ def test(cfg, model):
     features = torch.FloatTensor()
     for i, (inputs, ids, is_query, indices) in enumerate(loader_test):
         # inputs: (b, c, h, w)
-        ff = torch.FloatTensor(cfg.batch_size, 512).zero_().cuda()
+        # NOTE: if use batch size instead of n, the last batch size will not match.
+        n, c, h, w = inputs.size()
+        ff = torch.FloatTensor(n, 512).zero_().cuda()
         inputs_img = inputs.cuda()
 
         # for i in range(2):
@@ -360,6 +362,7 @@ def main():
         if cfg.use_gpu:
             torch.cuda.set_device(cfg.gpu)
             model.cuda()
+        # NOTE: You must run test in no_grad mode, otherwise GPU memory usage will exceed limit.
         with torch.no_grad():
             test(cfg, model)
 
