@@ -86,20 +86,20 @@ def test(cfg, model):
     features = torch.FloatTensor()
     for i, (inputs, ids, is_query, indices) in enumerate(loader_test):
         # inputs: (b, c, h, w)
-        ff = torch.FloatTensor(cfg.batch_size, 512).zero_().cuda()
+        # ff = torch.FloatTensor(cfg.batch_size, 512).zero_().cuda()
         inputs_img = inputs.cuda()
 
         outputs = model(inputs_img)
-        ff += outputs
-        inputs = util.fliplr(inputs)
-        outputs = model(inputs_img)
-        ff += outputs
+        # ff += outputs
+        # inputs = util.fliplr(inputs)
+        # outputs = model(inputs_img)
+        # ff += outputs
 
-        fnorm = torch.norm(ff, p=2, dim=1, keepdim=True)
-        ff = ff.div(fnorm.expand_as(ff))
+        # fnorm = torch.norm(ff, p=2, dim=1, keepdim=True)
+        # ff = ff.div(fnorm.expand_as(ff))
 
         with torch.no_grad():
-            outputs = ff.cpu().numpy()
+            outputs = outputs.cpu().numpy()
 
         for output, id, label, index in zip(outputs, ids, is_query, indices):
             # query image
